@@ -12,14 +12,22 @@ export async function startUp() {
         .env()
         .file({ file: "./config.json" })
         .defaults({
+            // The port the server will listen on.
             port: 3000,
 
+            // Fully qualified URL to poll.
             randomApiUrl: "https://csrng.net/csrng/csrng.php?min=0&max=100",
+            // Extended cron syntax with support for seconds.
             cronSchedule: "*/1 * * * * *",
 
+            // The number of milliseconds to wait before retrying a request that has been throttled.
             throttledRetryDelayInMs: 10,
+            // The maximum number of times to retry a request that has been throttled.
+            maxThrottledRetries: 50,
 
+            // The number of times to retry a request that has errored.
             errorRetries: 10,
+            // The number of milliseconds to wait before timing out a request.
             requestTimeoutInMs: 500
         });
 
@@ -28,6 +36,8 @@ export async function startUp() {
         cronSchedule: nconf.get("cronSchedule"),
 
         throttledRetryDelayInMs: nconf.get("throttledRetryDelayInMs"),
+        maxThrottledRetries: nconf.get("maxThrottledRetries"),
+
         errorRetries: nconf.get("errorRetries"),
         requestTimeoutInMs: nconf.get("requestTimeoutInMs")
     });

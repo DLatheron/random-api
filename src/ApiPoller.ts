@@ -7,6 +7,7 @@ export interface ApiPollerConfig {
     cronSchedule: string;
 
     throttledRetryDelayInMs: number;
+    maxThrottledRetries: number;
     errorRetries: number;
     requestTimeoutInMs: number;
 }
@@ -106,7 +107,7 @@ export class ApiPoller {
 
         let retry = 0;
 
-        for ( ; ; ) {
+        do {
             try {
                 const json = await ky.get(this.config.randomApiUrl, this.kyOptions).json<ServerResponse[]>()
                 if (!json || !Array.isArray(json) || !json[0]) {
@@ -116,15 +117,18 @@ export class ApiPoller {
                 const response = json[0];
                 if (isServerErrorResponse(response)) {
                     if (response.code === "5") {
-                        ++retry;
+                        retry++;
+                        if (retry > this.config.maxThrottledRetries) {
+                            console.warn("Max retries exceeded - aborting");
+                            break;
+                        }
+
                         console.warn(`Less than a second since that last request - retrying... (retry attempt: ${retry})`);
 
                         await delay(this.config.throttledRetryDelayInMs);
-
-                        continue;
+                    } else {
+                        throw new Error(response.reason);
                     }
-
-                    throw new Error(response.reason);
                 } else if (isServerSuccessResponse(response)) {
                     this.countRandomNumber(response.random);
                     return;
@@ -140,6 +144,6 @@ export class ApiPoller {
                 }
                 return;
             }
-        }
+        } while (true);
     }
 }

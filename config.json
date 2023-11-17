@@ -4,6 +4,7 @@
     "cronSchedule": "*/1 * * * * *",
 
     "throttledRetryDelayInMs": 10,
+    "maxThrottledRetries": 50,
 
     "errorRetries": 10,
     "requestTimeoutInMs": 500
