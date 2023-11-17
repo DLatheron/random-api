@@ -3,9 +3,9 @@
  * https://jestjs.io/docs/configuration
  */
 
-import type { Config } from 'jest';
+import type { JestConfigWithTsJest } from 'ts-jest';
 
-const config: Config = {
+const config: JestConfigWithTsJest = {
     // All imported modules in your tests should be mocked automatically
     // automock: true,
 
@@ -175,20 +175,19 @@ const config: Config = {
     // testRunner: "jest-circus/runner",
 
     // A map from regular expressions to paths to transformers
-    // transform: {
-    //     "^.+\\.ts?$": [
-    //         "ts-jest",
-    //         {
-    //             tsconfig: "./tsconfig.json"
-    //         }
-    //     ]
-    // },
+    transform: {
+        "^.+\\.[tj]sx?$": [
+            "ts-jest",
+            {
+                useESM: true
+            }
+        ]
+    },
 
     // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-    // transformIgnorePatterns: [
-    //   "/node_modules/",
-    //   "\\.pnp\\.[^\\/]+$"
-    // ],
+    transformIgnorePatterns: [
+        '/node_modules/?!ky/distribution' // tell `ts-jest` to transform all js files in `ky/distribution` folder because all ky's js files are ESM files
+    ],
 
     // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
     // unmockedModulePathPatterns: undefined,

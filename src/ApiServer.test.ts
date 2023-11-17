@@ -1,14 +1,15 @@
-import { Express } from "express";
+import { Express, Request, Response } from "express";
 import { Server } from "http";
 
-import { ApiServer } from "./ApiServer";
+import { ApiServer, ApiServerConfig } from "./ApiServer";
 
 jest.mock("http");
 
-describe("startApiServer", () => {
+describe("ApiServer", () => {
     let apiServer: ApiServer;
     let mockApp: Express;
     let mockServer: Server;
+    let apiConfig: ApiServerConfig
 
     beforeEach(() => {
         mockServer = {
@@ -21,6 +22,11 @@ describe("startApiServer", () => {
                 return mockServer;
             })
         } as unknown as Express;
+        apiConfig = {
+            app: mockApp,
+            port: 3456,
+            calcAverage: jest.fn()
+        };
 
         jest.spyOn(console, "info").mockImplementation(() => {});
         jest.spyOn(console, "error").mockImplementation(() => {});
@@ -28,7 +34,7 @@ describe("startApiServer", () => {
 
     describe("constructor", () => {
         it("should register a GET /api/v1/random_average route", () => {
-            apiServer = new ApiServer(mockApp, 3456);
+            apiServer = new ApiServer(apiConfig);
 
             expect(mockApp.get).toHaveBeenCalledTimes(1);
             expect(mockApp.get).toHaveBeenCalledWith("/api/v1/random_average", expect.any(Function));
@@ -38,7 +44,7 @@ describe("startApiServer", () => {
 
     describe("start", () => {
         beforeEach(() => {
-            apiServer = new ApiServer(mockApp, 3456);
+            apiServer = new ApiServer(apiConfig);
         });
 
         it("should start an http server", async () => {
@@ -62,7 +68,7 @@ describe("startApiServer", () => {
 
     describe("stop", () => {
         beforeEach(async () => {
-            apiServer = new ApiServer(mockApp, 3456);
+            apiServer = new ApiServer(apiConfig);
         });
 
         describe("when the http server is not running", () => {
@@ -133,6 +139,32 @@ describe("startApiServer", () => {
     });
 
     describe("getAverage", () => {
-        it.todo("should return the current average");
+        let request: Request;
+        let response: Response;
+
+        beforeEach(async () => {
+            request = {} as Request;
+            response = {
+                send: jest.fn()
+            } as unknown as Response;
+
+            apiConfig.calcAverage = jest.fn().mockReturnValue(42);
+
+            apiServer = new ApiServer(apiConfig);
+        });
+        
+        it("should call the calcAverage function", () => {
+            apiServer.getAverage(request, response);
+
+            expect(apiConfig.calcAverage).toHaveBeenCalledTimes(1);
+            expect(apiConfig.calcAverage).toHaveBeenCalledWith();
+        });
+        
+        it("should return the result of calling the calcAverage function", () => {
+            apiServer.getAverage(request, response);
+
+            expect(response.send).toHaveBeenCalledTimes(1);
+            expect(response.send).toHaveBeenCalledWith({ average: 42 });
+        });
     });
 });

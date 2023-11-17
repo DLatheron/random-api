@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.91% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>47/49</span>
+                <span class='fraction'>53/53</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/10</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">95.91% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>47/49</span>
+                <span class='fraction'>53/53</span>
             </div>
         
             
@@ -112,7 +112,11 @@
 <a name='L47'></a><a href='#L47'>47</a>
 <a name='L48'></a><a href='#L48'>48</a>
 <a name='L49'></a><a href='#L49'>49</a>
-<a name='L50'></a><a href='#L50'>50</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -121,14 +125,18 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">8x</span>
@@ -158,30 +166,34 @@
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Express, Request, Response } from "express";
 import { Server } from "http";
 &nbsp;
+export interface ApiServerConfig {
+    app: Express;
+    port: number;
+    calcAverage: () =&gt; number | undefined;
+}
+&nbsp;
 export class ApiServer {
-    private readonly app: Express;
-    private readonly port: number;
+    private readonly config: ApiServerConfig;;
     private server?: Server;
 &nbsp;
-    constructor(app: Express, port: number) {
-        this.app = app;
-        this.port = port;
+    constructor(config: ApiServerConfig) {
+        this.config = config;
 &nbsp;
-        this.app.get(
+        this.config.app.get(
             "/api/v1/random_average", 
             this.getAverage.bind(this)
         );
     }
 &nbsp;
     async start() {
-        this.server = this.app.listen(this.port, () =&gt; {
-            console.info(`⚡️ Server running on port ${this.port}`);
+        this.server = this.config.app.listen(this.config.port, () =&gt; {
+            console.info(`⚡️ Server running on port ${this.config.port}`);
         });
 &nbsp;
         return this.server;
@@ -193,7 +205,7 @@ export class ApiServer {
                 return resolve();
             }
 &nbsp;
-            console.info("Shutting down...");
+            console.info("Shutting down server...");
             this.server.close(error =&gt; {
                 if (error) {
                     console.error(error);
@@ -206,9 +218,9 @@ export class ApiServer {
         });
     }
 &nbsp;
-<span class="fstat-no" title="function not covered" >    getAverage(_req: Request, res: Response) {</span>
-<span class="cstat-no" title="statement not covered" >        res.send({ average: 42 });</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
+    getAverage(_req: Request, res: Response) {
+        res.send({ average: this.config.calcAverage() });
+    }
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -217,7 +229,7 @@ export class ApiServer {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2023-11-17T08:14:38.626Z
+                at 2023-11-17T19:18:10.357Z
             </div>
         <script src="prettify.js"></script>
         <script>

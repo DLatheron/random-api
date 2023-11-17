@@ -1,7 +1,5 @@
 {
     "extends": "./tsconfig.json",
+    "include": ["server.ts", "src"],
     "exclude": ["**/*.test.*"],
-    "compilerOptions": {
-        "moduleResolution": "nodenext"
-    }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import express from "express";
 import nconf from "nconf";
-import { RandomApiPoller } from "./src/randomApiPoller.js";
+import { ApiPoller } from "./src/ApiPoller.js";
 import { ApiServer } from "./src/ApiServer.js";
 export async function startUp() {
     nconf.argv({
@@ -12,17 +12,27 @@ export async function startUp() {
         .defaults({
         port: 3000,
         randomApiUrl: "https://csrng.net/csrng/csrng.php?min=0&max=100",
-        cronSchedule: "*/1 * * * * *"
+        cronSchedule: "*/1 * * * * *",
+        throttledRetryDelayInMs: 10,
+        errorRetries: 10,
+        requestTimeoutInMs: 500
     });
-    const randomApiPoller = new RandomApiPoller({
+    const apiPoller = new ApiPoller({
         randomApiUrl: nconf.get("randomApiUrl"),
-        cronSchedule: nconf.get("cronSchedule")
+        cronSchedule: nconf.get("cronSchedule"),
+        throttledRetryDelayInMs: nconf.get("throttledRetryDelayInMs"),
+        errorRetries: nconf.get("errorRetries"),
+        requestTimeoutInMs: nconf.get("requestTimeoutInMs")
     });
-    randomApiPoller.start();
-    const apiServer = new ApiServer(express(), nconf.get("port"), () => randomApiPoller.getAverage());
+    apiPoller.start();
+    const apiServer = new ApiServer({
+        app: express(),
+        port: nconf.get("port"),
+        calcAverage: () => apiPoller.getAverage()
+    });
     apiServer.start();
     async function shutdown() {
-        randomApiPoller.stop();
+        apiPoller.stop();
         await apiServer.stop();
         process.exit();
     }

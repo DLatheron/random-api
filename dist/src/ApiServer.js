@@ -1,13 +1,12 @@
 export class ApiServer {
-    constructor(app, port, calcAverage) {
-        this.app = app;
-        this.port = port;
-        this.calcAverage = calcAverage;
-        this.app.get("/api/v1/random_average", this.getAverage.bind(this));
+    ;
+    constructor(config) {
+        this.config = config;
+        this.config.app.get("/api/v1/random_average", this.getAverage.bind(this));
     }
     async start() {
-        this.server = this.app.listen(this.port, () => {
-            console.info(`⚡️ Server running on port ${this.port}`);
+        this.server = this.config.app.listen(this.config.port, () => {
+            console.info(`⚡️ Server running on port ${this.config.port}`);
         });
         return this.server;
     }
@@ -28,8 +27,6 @@ export class ApiServer {
         });
     }
     getAverage(_req, res) {
-        console.log("Request received");
-        const average = this.calcAverage();
-        res.send({ average });
+        res.send({ average: this.config.calcAverage() });
     }
 }
