@@ -2,7 +2,7 @@
 import express from "express";
 import nconf from "nconf";
 
-import { randomApiPoller } from "./src/randomApiPoller.js";
+import { RandomApiPoller } from "./src/randomApiPoller.js";
 import { ApiServer } from "./src/ApiServer.js";
 
 export async function startUp() {
@@ -14,15 +14,26 @@ export async function startUp() {
         .defaults({
             port: 3000,
             randomApiUrl: "https://csrng.net/csrng/csrng.php?min=0&max=100",
-            pollingIntervalInMs: 1000,
-            maxRetries: 10,
-            retryIntervalInMs: 10
+            cronSchedule: "*/1 * * * * *"
         });
 
-    const apiServer = new ApiServer(express(), nconf.get("port"));
+    const randomApiPoller = new RandomApiPoller({
+        randomApiUrl: nconf.get("randomApiUrl"),
+        cronSchedule: nconf.get("cronSchedule")
+    });
+    randomApiPoller.start();
+
+    const apiServer = new ApiServer(express(), nconf.get("port"), () => randomApiPoller.getAverage());
     apiServer.start();
 
-    randomApiPoller();
+    async function shutdown(): Promise<never> {
+        randomApiPoller.stop();
+        await apiServer.stop();
+        process.exit();
+    }
+
+    process.on("SIGINT", () => shutdown());
+    process.on("SIGTERM", () => shutdown());
 }
 
 startUp();

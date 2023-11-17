@@ -12,7 +12,7 @@ describe("startApiServer", () => {
 
     beforeEach(() => {
         mockServer = {
-            close: jest.fn()
+            close: jest.fn().mockImplementation(cb => cb())
         } as unknown as Server;
         mockApp = {
             get: jest.fn(),
@@ -23,6 +23,7 @@ describe("startApiServer", () => {
         } as unknown as Express;
 
         jest.spyOn(console, "info").mockImplementation(() => {});
+        jest.spyOn(console, "error").mockImplementation(() => {});
     });
 
     describe("constructor", () => {
@@ -62,14 +63,72 @@ describe("startApiServer", () => {
     describe("stop", () => {
         beforeEach(async () => {
             apiServer = new ApiServer(mockApp, 3456);
-            await apiServer.start();
         });
 
-        it("should close the http server", () => {
-            apiServer.stop();
+        describe("when the http server is not running", () => {
+            beforeEach(() => {
+                (mockApp.listen as jest.Mock).mockClear();
+                (mockServer.close as jest.Mock).mockClear();
+            });
 
-            expect(mockServer.close).toHaveBeenCalledTimes(1);
-            expect(mockServer.close).toHaveBeenCalledWith();
+            it("should not close the http server", async () => {
+                await apiServer.stop();
+
+                expect(mockServer.close).not.toHaveBeenCalled();
+            });
+
+            it("should resolve", async () => {
+                await expect(apiServer.stop()).resolves.toBeUndefined();
+            });
+        });
+
+        describe("when the http server is running", () => {
+            beforeEach(async () => {
+                await apiServer.start();
+
+                (console.info as jest.Mock).mockClear();
+            });
+
+            it("should close the http server", () => {
+                apiServer.stop();
+
+                expect(mockServer.close).toHaveBeenCalledTimes(1);
+                expect(mockServer.close).toHaveBeenCalledWith(expect.any(Function));
+            });
+
+            it("should resolve", async () => {
+                await expect(apiServer.stop()).resolves.toBeUndefined();
+            });
+
+            it("should log that the server is shutting down", async () => {
+                await apiServer.stop();
+
+                expect(console.info).toHaveBeenCalledTimes(1);
+                expect(console.info).toHaveBeenCalledWith("Shutting down server...");
+            });
+
+            describe("when the http server fails to close successfully", () => {
+                let expectedError: Error;
+
+                beforeEach(() => {
+                    expectedError = new Error("Oh no!");
+                    (mockServer.close as jest.Mock).mockImplementationOnce(cb => cb(expectedError));
+                });
+
+                it("should log any errors that occur when closing the http server", async () => {
+                    await expect(apiServer.stop()).rejects.toThrow(expectedError);
+
+                    expect(console.error).toHaveBeenCalledTimes(1);
+                    expect(console.error).toHaveBeenCalledWith(expectedError);
+                });
+
+                it("should log any errors that occur when closing the http server", async () => {
+                    await expect(apiServer.stop()).rejects.toThrow(expectedError);
+
+                    expect(console.error).toHaveBeenCalledTimes(1);
+                    expect(console.error).toHaveBeenCalledWith(expectedError);
+                });
+            });
         });
     });
 
