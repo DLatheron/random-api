@@ -6,12 +6,14 @@
     "type": "module",
     "scripts": {
         "build": "npx tsc -p tsconfig.build.json && chmod +x ./dist/server.js",
+        "checked:build": "npm run type:check && npm run lint && npm run test && npm run build",
         "dev": "concurrently 'npx tsc -p tsconfig.build.json --watch' 'nodemon -q dist/server.js'",
         "lint": "eslint . --ext .ts",
-        "lint:watch": "esw -w --changed . --ext .ts",
+        "lint:watch": "esw --color -w --changed . --ext .ts",
         "start": "node dist/server.js",
         "test": "jest",
-        "test:watch": "jest --watch"
+        "test:watch": "jest --watch",
+        "type:check": "tsc"
     },
     "author": "D.Latheron",
     "license": "UNLICENSED",

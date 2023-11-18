@@ -7,5 +7,5 @@
     "maxThrottledRetries": 50,
 
     "errorRetries": 10,
-    "requestTimeoutInMs": 500
+    "requestTimeoutInMs": 3000
 }

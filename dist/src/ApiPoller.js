@@ -57,19 +57,23 @@ export class ApiPoller {
         for (;;) {
             try {
                 const json = await ky.get(this.config.randomApiUrl, this.kyOptions).json();
-                console.debug(json);
                 if (!json || !Array.isArray(json) || !json[0]) {
                     throw new Error("Unexpected response from server");
                 }
                 const response = json[0];
                 if (isServerErrorResponse(response)) {
                     if (response.code === "5") {
-                        ++retry;
+                        retry++;
+                        if (retry > this.config.maxThrottledRetries) {
+                            console.warn("Max retries exceeded - aborting");
+                            break;
+                        }
                         console.warn(`Less than a second since that last request - retrying... (retry attempt: ${retry})`);
                         await delay(this.config.throttledRetryDelayInMs);
-                        continue;
                     }
-                    throw new Error(response.reason);
+                    else {
+                        throw new Error(response.reason);
+                    }
                 }
                 else if (isServerSuccessResponse(response)) {
                     this.countRandomNumber(response.random);
@@ -86,6 +90,7 @@ export class ApiPoller {
                 else {
                     console.error(error);
                 }
+                return;
             }
         }
     }

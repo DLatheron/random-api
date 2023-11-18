@@ -5,32 +5,31 @@ import nconf from "nconf";
 import { ApiPoller } from "./src/ApiPoller.js";
 import { ApiServer } from "./src/ApiServer.js";
 
+nconf
+    .argv({ parseValues: true })
+    .env()
+    .file({ file: "./config.json" })
+    .defaults({
+        // The port the server will listen on.
+        port: 3000,
+
+        // Fully qualified URL to poll.
+        randomApiUrl: "https://csrng.net/csrng/csrng.php?min=0&max=100",
+        // Extended cron syntax with support for seconds.
+        cronSchedule: "*/1 * * * * *",
+
+        // The number of milliseconds to wait before retrying a request that has been throttled.
+        throttledRetryDelayInMs: 10,
+        // The maximum number of times to retry a request that has been throttled.
+        maxThrottledRetries: 50,
+
+        // The number of times to retry a request that has errored.
+        errorRetries: 10,
+        // The number of milliseconds to wait before timing out a request.
+        requestTimeoutInMs: 500
+    });
+    
 export async function startUp() {
-    nconf.argv({
-        parseValues: true
-    })
-        .env()
-        .file({ file: "./config.json" })
-        .defaults({
-            // The port the server will listen on.
-            port: 3000,
-
-            // Fully qualified URL to poll.
-            randomApiUrl: "https://csrng.net/csrng/csrng.php?min=0&max=100",
-            // Extended cron syntax with support for seconds.
-            cronSchedule: "*/1 * * * * *",
-
-            // The number of milliseconds to wait before retrying a request that has been throttled.
-            throttledRetryDelayInMs: 10,
-            // The maximum number of times to retry a request that has been throttled.
-            maxThrottledRetries: 50,
-
-            // The number of times to retry a request that has errored.
-            errorRetries: 10,
-            // The number of milliseconds to wait before timing out a request.
-            requestTimeoutInMs: 500
-        });
-
     const apiPoller = new ApiPoller({
         randomApiUrl: nconf.get("randomApiUrl"),
         cronSchedule: nconf.get("cronSchedule"),

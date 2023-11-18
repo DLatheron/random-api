@@ -107,7 +107,7 @@ export class ApiPoller {
 
         let retry = 0;
 
-        do {
+        for ( ; ; ) {
             try {
                 const json = await ky.get(this.config.randomApiUrl, this.kyOptions).json<ServerResponse[]>()
                 if (!json || !Array.isArray(json) || !json[0]) {
@@ -144,6 +144,6 @@ export class ApiPoller {
                 }
                 return;
             }
-        } while (true);
+        }
     }
 }

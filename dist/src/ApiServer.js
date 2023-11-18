@@ -1,5 +1,4 @@
 export class ApiServer {
-    ;
     constructor(config) {
         this.config = config;
         this.config.app.get("/api/v1/random_average", this.getAverage.bind(this));

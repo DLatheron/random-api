@@ -8,7 +8,7 @@ export interface ApiServerConfig {
 }
 
 export class ApiServer {
-    private readonly config: ApiServerConfig;;
+    private readonly config: ApiServerConfig;
     private server?: Server;
 
     constructor(config: ApiServerConfig) {
