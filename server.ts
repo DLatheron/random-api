@@ -26,7 +26,7 @@ nconf
         // The number of times to retry a request that has errored.
         errorRetries: 10,
         // The number of milliseconds to wait before timing out a request.
-        requestTimeoutInMs: 500
+        requestTimeoutInMs: 2000
     });
     
 export async function startUp() {

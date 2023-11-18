@@ -95,6 +95,13 @@ describe("ApiServer", () => {
                 (console.info as jest.Mock).mockClear();
             });
 
+            it("should log that the server is shutting down", async () => {
+                await apiServer.stop();
+
+                expect(console.info).toHaveBeenCalledTimes(1);
+                expect(console.info).toHaveBeenCalledWith("Shutting down server...");
+            });
+            
             it("should close the http server", () => {
                 apiServer.stop();
 
@@ -106,11 +113,10 @@ describe("ApiServer", () => {
                 await expect(apiServer.stop()).resolves.toBeUndefined();
             });
 
-            it("should log that the server is shutting down", async () => {
+            it("should set the http server to undefined", async () => {
                 await apiServer.stop();
 
-                expect(console.info).toHaveBeenCalledTimes(1);
-                expect(console.info).toHaveBeenCalledWith("Shutting down server...");
+                expect(apiServer["server"]).toBeUndefined();
             });
 
             describe("when the http server fails to close successfully", () => {
@@ -128,11 +134,8 @@ describe("ApiServer", () => {
                     expect(console.error).toHaveBeenCalledWith(expectedError);
                 });
 
-                it("should log any errors that occur when closing the http server", async () => {
+                it("should throw the error", async () => {
                     await expect(apiServer.stop()).rejects.toThrow(expectedError);
-
-                    expect(console.error).toHaveBeenCalledTimes(1);
-                    expect(console.error).toHaveBeenCalledWith(expectedError);
                 });
             });
         });

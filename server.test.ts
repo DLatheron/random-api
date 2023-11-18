@@ -26,11 +26,11 @@ describe("startUp", () => {
                 maxThrottledRetries: 50,
 
                 errorRetries: 10,
-                requestTimeoutInMs: 500
+                requestTimeoutInMs: 2000
             });
         });
 
-        it("should constructed with an overriden config", async () => {
+        it("should be constructed with an overriden config", async () => {
             nconf.set("randomApiUrl", "some-random-api-url");
             nconf.set("cronSchedule", "some-cron-schedule");
 
@@ -85,7 +85,7 @@ describe("startUp", () => {
             });
         });
 
-        it("should supply a calcAverage function which calls the apiPoller's getAverage function", async () => {
+        it("should be supplied a calcAverage function which calls the apiPoller's getAverage function", async () => {
             await startUp();
 
             const calcAverage = (ApiServer as jest.Mock).mock.calls[0][0].calcAverage;
@@ -112,7 +112,7 @@ describe("startUp", () => {
             jest.spyOn(process, "on").mockImplementation();
         });
 
-        it("should register the shutdown function against the process exit event", async () => {
+        it("should register the shutdown function against the process exit events", async () => {
             await startUp();
 
             expect(process.on).toHaveBeenCalledTimes(2);

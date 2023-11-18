@@ -28,11 +28,20 @@ describe("ApiPoller", () => {
             expect(apiPoller["statistics"].count).toBe(0);
             expect(apiPoller["statistics"].allRandomNumbers).toStrictEqual([]);
         });
+
+        it("should default the ky options", () => {
+            expect(apiPoller["kyOptions"]).toStrictEqual({
+                timeout: 1234,
+                retry: 3
+            });
+        });
     });
 
     describe("start", () => {
         beforeEach(() => {
             jest.spyOn(apiPoller, "resetStatistics");
+            schedule.scheduleJob = jest.fn().mockReturnValue("some-job");
+
         });
 
         it("should reset its statistics", () => {
@@ -48,6 +57,18 @@ describe("ApiPoller", () => {
             expect(schedule.scheduleJob).toHaveBeenCalledTimes(1);
             expect(schedule.scheduleJob).toHaveBeenCalledWith("*/5 * * * * *", expect.any(Function));
             expect((schedule.scheduleJob as jest.Mock).mock.calls[0][1].name).toBe("bound pollApi");
+        });
+
+        it("should store the job for later use", () => {
+            apiPoller.start();
+
+            expect(apiPoller["job"]).toBe("some-job");
+        });
+
+        it("should throw an error if the job fails to be scheduled", () => {
+            schedule.scheduleJob = jest.fn().mockReturnValue(undefined);
+
+            expect(() => apiPoller.start()).toThrow("Failed to schedule job, please check the cron schedule: */5 * * * * *");
         });
     });
 
@@ -131,13 +152,25 @@ describe("ApiPoller", () => {
             expect(apiPoller["statistics"].allRandomNumbers).toStrictEqual([10]);
         });
 
-        it("should log and error if the accumulated total exceeds the maximum safe value of a number", () => {
-            apiPoller["statistics"].accumulatedTotal = Number.MAX_SAFE_INTEGER - 1;
+        describe("if the accumulated total exceeds the maximum safe value of a number", () => {
+            beforeEach(() => {
+                apiPoller["statistics"].accumulatedTotal = Number.MAX_SAFE_INTEGER - 1;
+            });
 
-            apiPoller["countRandomNumber"](10);
+            it("should log an error ", () => {
+                apiPoller["countRandomNumber"](10);
 
-            expect(console.error).toHaveBeenCalledTimes(1);
-            expect(console.error).toHaveBeenCalledWith("Accumulated total has exceeded the maximum safe integer value - resetting statistics");
+                expect(console.error).toHaveBeenCalledTimes(1);
+                expect(console.error).toHaveBeenCalledWith("Accumulated total has exceeded the maximum safe integer value - resetting statistics");
+            });
+
+            it("should reset the statistics", () => {
+                apiPoller["countRandomNumber"](10);
+
+                expect(apiPoller["statistics"].accumulatedTotal).toBe(0);
+                expect(apiPoller["statistics"].count).toBe(0);
+                expect(apiPoller["statistics"].allRandomNumbers).toStrictEqual([]);
+            });
         });
     });
 
@@ -184,6 +217,28 @@ describe("ApiPoller", () => {
                     expect(console.error).toHaveBeenCalledWith("Unexpected response from server");
                 });
 
+                it("should log an error if the response from the server is not an array", async () => {
+                    (ky.get as jest.Mock).mockReturnValue({ 
+                        json: jest.fn().mockResolvedValue({})
+                    } as unknown as ResponsePromise);
+
+                    await apiPoller["pollApi"]();
+
+                    expect(console.error).toHaveBeenCalledTimes(1);
+                    expect(console.error).toHaveBeenCalledWith("Unexpected response from server");
+                });                
+
+                it("should log an error if the response from the server has an empty array", async () => {
+                    (ky.get as jest.Mock).mockReturnValue({ 
+                        json: jest.fn().mockResolvedValue([])
+                    } as unknown as ResponsePromise);
+
+                    await apiPoller["pollApi"]();
+
+                    expect(console.error).toHaveBeenCalledTimes(1);
+                    expect(console.error).toHaveBeenCalledWith("Unexpected response from server");
+                });     
+
                 it("should log an error if the response from the server is an error", async () => {
                     (ky.get as jest.Mock).mockReturnValue({ 
                         json: jest.fn().mockResolvedValue([{ status: "error", code: "1", reason: "Something went wrong" }])
@@ -197,7 +252,7 @@ describe("ApiPoller", () => {
             });
 
             describe("when the API call fails", () => {
-                it("should log an error if the response from the is an HTTP error", async () => {
+                it("should log an error if the response from the server is an HTTP error", async () => {
                     const response = {
                         json: jest.fn().mockResolvedValue({ arbitary: "json-content" })
                     } as unknown as Response;
@@ -224,7 +279,7 @@ describe("ApiPoller", () => {
                     expect(console.error).toHaveBeenCalledWith("Something went wrong");
                 });
 
-                it("should log an error if the response from the server is an error", async () => {
+                it("should log an error if the response from the server is an error string", async () => {
                     (ky.get as jest.Mock).mockReturnValue({ 
                         json: jest.fn().mockRejectedValue("Just a string error")
                     } as unknown as ResponsePromise);
@@ -254,7 +309,7 @@ describe("ApiPoller", () => {
                     expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 13);
                 });
 
-                it("should log a warning", async () => {
+                it("should log warnings", async () => {
                     await apiPoller["pollApi"]();
 
                     expect(console.warn).toHaveBeenCalledTimes(2);

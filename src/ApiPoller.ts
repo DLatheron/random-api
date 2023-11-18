@@ -70,6 +70,9 @@ export class ApiPoller {
         this.resetStatistics();
 
         this.job = schedule.scheduleJob(this.config.cronSchedule, this.pollApi.bind(this));
+        if (!this.job) {
+            throw new Error(`Failed to schedule job, please check the cron schedule: ${this.config.cronSchedule}`);
+        }
     }
 
     stop() {
