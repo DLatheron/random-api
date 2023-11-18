@@ -169,5 +169,14 @@ describe("ApiServer", () => {
             expect(response.send).toHaveBeenCalledTimes(1);
             expect(response.send).toHaveBeenCalledWith({ average: 42 });
         });
+
+        it("should return the result of calling the calcAverage function - even when that result is undefined", () => {
+            apiConfig.calcAverage = jest.fn().mockReturnValue(undefined);
+            
+            apiServer.getAverage(request, response);
+
+            expect(response.send).toHaveBeenCalledTimes(1);
+            expect(response.send).toHaveBeenCalledWith({ average: undefined });
+        });        
     });
 });

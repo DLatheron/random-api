@@ -105,3 +105,27 @@ npm run type:check
 
     Obviously production system need monitor, but a simple enhancement to this app would be self-monitor when and if it misses polling the end-point for a given second. This would be a simple addition and could then log a message which could be picked up by an external monitor system to generate further statistics.
        
+## API Documentation
+
+The API is reachable on the path `/api/v1/random_average`
+
+```bash
+# When running locally (on the default port).
+curl http://localhost:3000/api/v1/random_average
+
+# If you already have something running on port 3000, the default port can be overriden in the `config.json` file.
+```
+
+If successful it returns a 200 and a `application/json` payload of:
+
+```json
+{"average":50.811196487376506}
+```
+
+Where this is the `average`` of all the polled random numbers so far. 
+
+If you call this endpoint *before* the system has polled any random numbers then you get:
+
+```json
+{}
+```
