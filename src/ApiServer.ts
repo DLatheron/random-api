@@ -5,6 +5,7 @@ export interface ApiServerConfig {
     app: Express;
     port: number;
     calcAverage: () => number | undefined;
+    getFrequency: (value: number) => number | undefined;
 }
 
 export class ApiServer {
@@ -17,6 +18,11 @@ export class ApiServer {
         this.config.app.get(
             "/api/v1/random_average", 
             this.getAverage.bind(this)
+        );
+
+        this.config.app.get(
+            "/api/v1/frequency",
+            this.getFrequency.bind(this)
         );
     }
 
@@ -49,5 +55,11 @@ export class ApiServer {
 
     getAverage(_req: Request, res: Response) {
         res.send({ average: this.config.calcAverage() });
+    }
+
+    getFrequency(req: Request, res: Response) {
+        const value = parseInt((req.query as { value: string }).value, 10);
+
+        res.send({ frequency: this.config.getFrequency(value) });
     }
 }

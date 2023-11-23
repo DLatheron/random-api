@@ -36,7 +36,8 @@ export async function startUp() {
     const apiServer = new ApiServer({
         app: express(),
         port: nconf.get("port"),
-        calcAverage: () => apiPoller.getAverage()
+        calcAverage: () => apiPoller.getAverage(),
+        getFrequency: (value) => apiPoller.getFrequency(value)
     });
     apiServer.start();
     async function shutdown() {

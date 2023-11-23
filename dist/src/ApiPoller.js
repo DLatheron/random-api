@@ -16,7 +16,8 @@ export class ApiPoller {
         this.statistics = {
             accumulatedTotal: 0,
             count: 0,
-            allRandomNumbers: []
+            allRandomNumbers: [],
+            randomNumberCount: {}
         };
         this.kyOptions = {
             timeout: config.requestTimeoutInMs,
@@ -39,16 +40,21 @@ export class ApiPoller {
             ? undefined
             : this.statistics.accumulatedTotal / this.statistics.count;
     }
+    getFrequency(value) {
+        return this.statistics.randomNumberCount[value];
+    }
     resetStatistics() {
         this.statistics.accumulatedTotal = 0;
         this.statistics.count = 0;
         this.statistics.allRandomNumbers = [];
+        this.statistics.randomNumberCount = {};
     }
     countRandomNumber(randomNumber) {
         // Storing the random number for unspecified future use.
         this.statistics.allRandomNumbers.push(randomNumber);
         this.statistics.accumulatedTotal += randomNumber;
         this.statistics.count++;
+        this.statistics.randomNumberCount[randomNumber] = (this.statistics.randomNumberCount[randomNumber] ?? 0) + 1;
         if (this.statistics.accumulatedTotal >= Number.MAX_SAFE_INTEGER) {
             console.error("Accumulated total has exceeded the maximum safe integer value - resetting statistics");
             this.resetStatistics();

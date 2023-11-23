@@ -27,6 +27,7 @@ describe("ApiPoller", () => {
             expect(apiPoller["statistics"].accumulatedTotal).toBe(0);
             expect(apiPoller["statistics"].count).toBe(0);
             expect(apiPoller["statistics"].allRandomNumbers).toStrictEqual([]);
+            expect(apiPoller["statistics"].randomNumberCount).toStrictEqual({});
         });
 
         it("should default the ky options", () => {
@@ -121,11 +122,35 @@ describe("ApiPoller", () => {
         });
     });
 
+    describe("getFrequency", () => {
+        beforeEach(() => {
+            apiPoller["statistics"].randomNumberCount = {
+                10: 2,
+                11: 56,
+                12: 8
+            };
+        });
+
+        it("should return the correct frequency value", () => {
+            expect(apiPoller.getFrequency(11)).toBe(56);
+        });
+
+        it("should return undefined if the frequency has not been encountered yet", () => {
+            expect(apiPoller.getFrequency(42)).toBeUndefined();
+        });
+
+        it("should return undefined for an out of range value", () => {
+            expect(apiPoller.getFrequency(Number.MAX_SAFE_INTEGER)).toBeUndefined();
+        });
+    });
+
     describe("resetStatistics", () => {
         beforeEach(() => {
             apiPoller["statistics"].accumulatedTotal = 100;
             apiPoller["statistics"].count = 10;
             apiPoller["statistics"].allRandomNumbers = [1, 2, 3];
+            apiPoller["statistics"].randomNumberCount = { 1: 2, 3: 7 };
+
         });
 
         it("should zero its statistics", () => {
@@ -134,6 +159,7 @@ describe("ApiPoller", () => {
             expect(apiPoller["statistics"].accumulatedTotal).toBe(0);
             expect(apiPoller["statistics"].count).toBe(0);
             expect(apiPoller["statistics"].allRandomNumbers).toStrictEqual([]);
+            expect(apiPoller["statistics"].randomNumberCount).toStrictEqual({});
         });
     });
 
@@ -150,7 +176,19 @@ describe("ApiPoller", () => {
             expect(apiPoller["statistics"].accumulatedTotal).toBe(10);
             expect(apiPoller["statistics"].count).toBe(1);
             expect(apiPoller["statistics"].allRandomNumbers).toStrictEqual([10]);
+            expect(apiPoller["statistics"].randomNumberCount).toStrictEqual({ 10: 1 });
         });
+
+        it("should add the random number to the statistics", () => {
+            apiPoller["countRandomNumber"](10);
+            apiPoller["countRandomNumber"](10);
+            apiPoller["countRandomNumber"](10);
+
+            expect(apiPoller["statistics"].accumulatedTotal).toBe(30);
+            expect(apiPoller["statistics"].count).toBe(3);
+            expect(apiPoller["statistics"].allRandomNumbers).toStrictEqual([10, 10, 10]);
+            expect(apiPoller["statistics"].randomNumberCount).toStrictEqual({ 10: 3 });
+        });        
 
         describe("if the accumulated total exceeds the maximum safe value of a number", () => {
             beforeEach(() => {

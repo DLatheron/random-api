@@ -2,6 +2,7 @@ export class ApiServer {
     constructor(config) {
         this.config = config;
         this.config.app.get("/api/v1/random_average", this.getAverage.bind(this));
+        this.config.app.get("/api/v1/frequency", this.getFrequency.bind(this));
     }
     async start() {
         this.server = this.config.app.listen(this.config.port, () => {
@@ -27,5 +28,9 @@ export class ApiServer {
     }
     getAverage(_req, res) {
         res.send({ average: this.config.calcAverage() });
+    }
+    getFrequency(req, res) {
+        const value = parseInt(req.query.value, 10);
+        res.send({ frequency: this.config.getFrequency(value) });
     }
 }
